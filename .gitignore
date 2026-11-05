@@ -7,3 +7,5 @@ htmlcov/
 .hypothesis/
 zap-out/
 .schemathesis/
+site/
+reports/

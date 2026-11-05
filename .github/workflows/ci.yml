@@ -29,10 +29,18 @@ jobs:
           cache: pip
           cache-dependency-path: requirements*.txt
       - run: pip install -r requirements-dev.txt
-      - run: pytest
+      - run: pytest --junitxml=reports/junit.xml --cov-report=json:reports/coverage.json
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: ${{ !cancelled() }}
+        with:
+          name: test-reports
+          path: reports/
 
   semgrep:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
     container:
       image: semgrep/semgrep:1.183.0@sha256:2e45517a85e13a9cca14a2a00df6bb48affd66b8ebfae1b0991cd57578362fb0
     steps:
@@ -49,6 +57,17 @@ jobs:
           --severity ERROR
           --error
           --metrics off
+          --sarif-output=semgrep.sarif
+      - uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        if: ${{ !cancelled() && !github.event.repository.private }}
+        with:
+          sarif_file: semgrep.sarif
+          category: semgrep
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: ${{ !cancelled() }}
+        with:
+          name: semgrep-reports
+          path: semgrep.sarif
 
   gitleaks:
     runs-on: ubuntu-latest
@@ -83,15 +102,25 @@ jobs:
           upload: ${{ github.event.repository.private && 'never' || 'always' }}
       - name: Fail on error-level findings
         run: |
-          count=$(jq -s '[.[].runs[].results[] | select(.level == "error")] | length' codeql-results/*.sarif)
+          cp codeql-results/*.sarif codeql.sarif
+          count=$(jq '[.runs[].results[] | select(.level == "error")] | length' codeql.sarif)
           echo "CodeQL error-level findings: $count"
           test "$count" -eq 0
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: ${{ !cancelled() }}
+        with:
+          name: codeql-reports
+          path: codeql.sarif
+          if-no-files-found: ignore
 
   # ── Stage 2: build once, scan, and hand the exact image to later stages ────
 
   build-scan:
     needs: [test, semgrep, gitleaks, codeql]
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -104,14 +133,43 @@ jobs:
           load: true
           push: false
           tags: ${{ env.LOCAL_IMAGE }}
-      - name: Trivy scan (fail on fixable HIGH/CRITICAL)
+      # Full reports first, so the dashboard has data even when the gate below fails.
+      - name: Trivy report (all severities, for the dashboard)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: ${{ env.LOCAL_IMAGE }}
+          scanners: vuln
+          format: json
+          output: trivy.json
+      - name: Trivy report (HIGH/CRITICAL, for the Security tab)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ${{ env.LOCAL_IMAGE }}
+          scanners: vuln
+          format: sarif
+          output: trivy.sarif
+          severity: HIGH,CRITICAL
+          limit-severities-for-sarif: true
+          skip-setup-trivy: true
+      - uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        if: ${{ !github.event.repository.private }}
+        with:
+          sarif_file: trivy.sarif
+          category: trivy
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: trivy-reports
+          path: trivy.json
+      - name: Trivy gate (fail on fixable HIGH/CRITICAL)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ${{ env.LOCAL_IMAGE }}
+          scanners: vuln
           severity: HIGH,CRITICAL
           ignore-unfixed: true
           exit-code: "1"
           format: table
+          skip-setup-trivy: true
       - name: Generate SBOM (CycloneDX)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
@@ -169,17 +227,20 @@ jobs:
           exit 1
       - name: OWASP ZAP API scan (fails on any WARN or FAIL alert)
         run: |
-          mkdir -p zap-out && chmod 777 zap-out
-          docker run --rm --network dast -v "$PWD/zap-out:/zap/wrk:rw" \
+          mkdir -p dast-out && chmod 777 dast-out
+          docker run --rm --network dast -v "$PWD/dast-out:/zap/wrk:rw" \
             ghcr.io/zaproxy/zaproxy:stable@sha256:9624669db72f54d86c4b46a7064518bd9bf79d8c61a4c31befa9923489f328af \
-            zap-api-scan.py -t http://app:8000/openapi.json -f openapi -r report.html -J report.json
+            zap-api-scan.py -t http://app:8000/openapi.json -f openapi -r zap-report.html -J zap-report.json
       - name: Schemathesis API fuzzing
-        run: schemathesis --config-file schemathesis.toml run http://localhost:8000/openapi.json
+        shell: bash
+        run: |
+          schemathesis --config-file schemathesis.toml run http://localhost:8000/openapi.json \
+            | tee dast-out/schemathesis.txt
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        if: always()
+        if: ${{ !cancelled() }}
         with:
-          name: zap-report
-          path: zap-out/
+          name: dast-reports
+          path: dast-out/
 
   # ── Stage 4: publish, sign, and attest (main only) ─────────────────────────
 
@@ -193,6 +254,9 @@ jobs:
       id-token: write # keyless Sigstore signing
       attestations: write
       artifact-metadata: write
+    outputs:
+      image: ${{ steps.push.outputs.image }}
+      digest: ${{ steps.push.outputs.digest }}
     steps:
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
@@ -235,3 +299,50 @@ jobs:
           subject-digest: ${{ steps.push.outputs.digest }}
           sbom-path: sbom.cdx.json
           push-to-registry: true
+
+  # ── Stage 5: publish the results as a public dashboard (main only) ─────────
+
+  dashboard:
+    needs: [test, semgrep, gitleaks, codeql, build-scan, dast, publish]
+    # Runs even when a gate fails, so the dashboard shows the failure instead of going stale.
+    if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: "*-reports"
+          path: reports
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        continue-on-error: true
+        with:
+          name: sbom
+          path: reports/sbom
+      - name: Build the dashboard
+        env:
+          GATE_TEST: ${{ needs.test.result }}
+          GATE_SEMGREP: ${{ needs.semgrep.result }}
+          GATE_GITLEAKS: ${{ needs.gitleaks.result }}
+          GATE_CODEQL: ${{ needs.codeql.result }}
+          GATE_BUILD_SCAN: ${{ needs.build-scan.result }}
+          GATE_DAST: ${{ needs.dast.result }}
+          GATE_PUBLISH: ${{ needs.publish.result }}
+          IMAGE: ${{ needs.publish.outputs.image }}
+          IMAGE_DIGEST: ${{ needs.publish.outputs.digest }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          PAGES_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
+        run: python3 dashboard/build.py --reports reports --out site
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: site
+      - id: deploy
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
