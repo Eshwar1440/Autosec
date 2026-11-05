@@ -20,14 +20,15 @@ from pathlib import Path
 from typing import Any
 
 GATES = [
-    ("test", "Tests + coverage", "pytest, Hypothesis"),
-    ("semgrep", "Static analysis", "Semgrep"),
-    ("gitleaks", "Secret scanning", "Gitleaks"),
-    ("codeql", "Data-flow analysis", "CodeQL"),
-    ("build_scan", "Image scan + SBOM", "Trivy"),
-    ("dast", "Attack the running app", "OWASP ZAP, Schemathesis"),
-    ("publish", "Sign + attest", "cosign, SLSA provenance"),
+    ("test", "Tests + coverage", "pytest, Hypothesis", "Unit, API, and property-based tests. Fails below 100% coverage."),
+    ("semgrep", "Static analysis", "Semgrep", "Scans the code, Dockerfile, and workflows for risky patterns."),
+    ("gitleaks", "Secret scanning", "Gitleaks", "Searches the whole git history for leaked keys and tokens."),
+    ("codeql", "Data-flow analysis", "CodeQL", "Traces untrusted input through the code to catch injection bugs."),
+    ("build_scan", "Image scan + SBOM", "Trivy", "Blocks fixable high and critical CVEs and lists every package."),
+    ("dast", "Live attack testing", "OWASP ZAP, Schemathesis", "Probes the running container and fuzzes every endpoint."),
+    ("publish", "Sign + attest", "cosign, SLSA provenance", "Signs the image and records exactly how it was built."),
 ]
+STATUS_LABELS = {"success": "Passed", "failure": "Failed", "cancelled": "Cancelled", "skipped": "Skipped"}
 SEVERITIES = ["CRITICAL", "HIGH", "MEDIUM", "LOW", "UNKNOWN"]
 ZAP_RISKS = {"3": "High", "2": "Medium", "1": "Low", "0": "Informational"}
 HISTORY_LIMIT = 30
@@ -142,7 +143,7 @@ def collect(reports: Path, env: dict[str, str]) -> dict[str, Any]:
         "run_url": env.get("RUN_URL", ""),
         "image": env.get("IMAGE", ""),
         "digest": env.get("IMAGE_DIGEST", ""),
-        "gates": {key: env.get(f"GATE_{key.upper()}", "unknown") for key, _, _ in GATES},
+        "gates": {key: env.get(f"GATE_{key.upper()}", "unknown") for key, *_ in GATES},
         "tests": tests_summary(reports),
         "coverage": coverage_percent(reports),
         "semgrep_findings": sarif_count(reports, "semgrep.sarif"),
@@ -209,12 +210,16 @@ STYLE = """
 main{max-width:1040px;margin:0 auto;padding:32px 16px 48px}h1{font-size:1.6rem;margin:0}h2{font-size:1.05rem;margin:32px 0 12px}
 .sub{color:var(--muted);margin:4px 0 0}a{color:inherit}code{font-family:ui-monospace,Consolas,monospace;font-size:.85em;word-break:break-all}
 .head{display:flex;gap:16px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
-.pill{padding:6px 14px;border-radius:999px;font-weight:600;color:#fff}.pill.ok{background:var(--ok)}.pill.bad{background:var(--bad)}
+.summary{display:flex;align-items:center;gap:10px;font-weight:600;white-space:nowrap}
 .grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}
 .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
 .card .k{color:var(--muted);font-size:.85rem}.card .v{font-size:1.6rem;font-weight:650;margin-top:2px}.card .n{color:var(--muted);font-size:.8rem}
-.gate{display:flex;gap:10px;align-items:flex-start}.dot{flex:none;width:12px;height:12px;border-radius:50%;margin-top:6px}
-.success{background:var(--ok)}.failure,.cancelled{background:var(--bad)}.skipped,.unknown{background:var(--na)}
+.lead{color:var(--muted);margin:-4px 0 12px;max-width:760px}.desc{font-size:.85rem;margin-top:6px}
+.gate-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.status{flex:none;font-size:.7rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:2px 8px;border-radius:6px;border:1px solid currentColor}
+.success{color:var(--ok)}.failure,.cancelled{color:var(--bad)}.skipped,.unknown{color:var(--na)}
+pre{margin:6px 0 0;padding:12px 14px;background:var(--bg);border:1px solid var(--line);border-radius:8px;overflow-x:auto}
+pre code{word-break:normal;white-space:pre}
 table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;font-size:.9rem}
 th,td{padding:8px 12px;text-align:right;border-bottom:1px solid var(--line)}th:first-child,td:first-child{text-align:left}
 tr:last-child td{border-bottom:none}th{color:var(--muted);font-weight:600}.wrap{overflow-x:auto}
@@ -227,13 +232,19 @@ def render(data: dict[str, Any], history: list[dict[str, Any]]) -> str:
     na = "n/a"
     repo, commit = data["repository"], data["commit"]
     repo_url = f"https://github.com/{repo}"
-    passed = all(v == "success" for v in data["gates"].values())
+    passed_count = sum(v == "success" for v in data["gates"].values())
+    passed = passed_count == len(GATES)
 
-    gate_cards = "".join(
-        f'<div class="card gate"><span class="dot {e(data["gates"][key])}"></span><div>'
-        f'<div><strong>{e(title)}</strong></div><div class="n">{e(tools)} · {e(data["gates"][key])}</div></div></div>'
-        for key, title, tools in GATES
-    )
+    def gate_card(key: str, title: str, tools: str, description: str) -> str:
+        result = data["gates"][key]
+        status = result if result in STATUS_LABELS else "unknown"
+        return (
+            f'<div class="card"><div class="gate-top"><strong>{e(title)}</strong>'
+            f'<span class="status {status}">{STATUS_LABELS.get(status, "No data")}</span></div>'
+            f'<div class="n">{e(tools)}</div><div class="desc">{e(description)}</div></div>'
+        )
+
+    gate_cards = "".join(gate_card(*gate) for gate in GATES)
 
     tests, trivy, zap, fuzz = data["tests"], data["trivy"], data["zap"], data["fuzz"]
 
@@ -261,8 +272,6 @@ def render(data: dict[str, Any], history: list[dict[str, Any]]) -> str:
         vuln_table = (
             '<div class="wrap"><table><tr><th>Severity</th><th>Fix available</th><th>No fix released</th></tr>'
             f"{rows}</table></div>"
-            '<p class="sub">The gate fails on any fixable high or critical CVE. Findings with no released fix '
-            "are tracked here and picked up by Dependabot's base-image updates once a fix ships.</p>"
         )
     else:
         vuln_table = f'<p class="sub">{na}</p>'
@@ -272,16 +281,21 @@ def render(data: dict[str, Any], history: list[dict[str, Any]]) -> str:
         ref = f"{data['image']}@{data['digest']}"
         supply = (
             "<h2>Published image</h2>"
-            f'<div class="card"><div class="k">Image</div><code>{e(ref)}</code>'
-            '<div class="n mt">Signed with cosign (keyless, Sigstore) and attested with '
-            "SLSA build provenance and a CycloneDX SBOM. Verify:</div>"
-            f"<code>cosign verify {e(ref)} --certificate-identity-regexp "
-            f"'^{e(repo_url)}/\\.github/workflows/ci\\.yml@' "
-            "--certificate-oidc-issuer https://token.actions.githubusercontent.com</code></div>"
+            '<p class="lead">The exact image this run released. Its digest changes if a single byte of the '
+            "image changes, and the keyless cosign signature proves it was built by this repository's CI. "
+            "It also carries SLSA build provenance and a CycloneDX SBOM.</p>"
+            f'<div class="card"><div class="k">Image digest</div><code>{e(ref)}</code>'
+            '<div class="k mt">Verify it yourself (requires cosign)</div>'
+            f"<pre><code>cosign verify {e(ref)} \\\n"
+            f"  --certificate-identity-regexp '^{e(repo_url)}/\\.github/workflows/ci\\.yml@' \\\n"
+            "  --certificate-oidc-issuer https://token.actions.githubusercontent.com</code></pre></div>"
         )
 
+    def commit_cell(sha: str) -> str:
+        return f'<a href="{e(repo_url)}/commit/{e(sha)}"><code>{e(sha)}</code></a>' if sha else na
+
     trend_rows = "".join(
-        f"<tr><td>{e(str(h.get('date', '')))}</td><td><code>{e(str(h.get('commit', '')))}</code></td>"
+        f"<tr><td>{e(str(h.get('date', '')))}</td><td>{commit_cell(str(h.get('commit', '')))}</td>"
         f"<td class=\"{'ok-t' if h.get('passed') else 'bad-t'}\">{'pass' if h.get('passed') else 'fail'}</td>"
         f"<td>{e(str(h.get('tests', na)))}</td><td>{e(str(h.get('coverage', na)))}</td>"
         f"<td>{e(str(h.get('blocking_vulns', na)))}</td><td>{e(str(h.get('total_vulns', na)))}</td></tr>"
@@ -301,12 +315,23 @@ def render(data: dict[str, Any], history: list[dict[str, Any]]) -> str:
 <div class="head"><div><h1>autosec security dashboard</h1>
 <p class="sub">Live results from the CI pipeline that gates every release of <a href="{e(repo_url)}">{e(repo)}</a>.
 Last run {e(data["generated_at"])} · commit {commit_link}{run_link}</p></div>
-<span class="pill {'ok' if passed else 'bad'}">{'All gates passing' if passed else 'Gate failing'}</span></div>
-<h2>Security gates</h2><div class="grid">{gate_cards}</div>
-<h2>Latest results</h2><div class="grid">{metrics}</div>
-<h2>Container vulnerabilities (Trivy, all severities)</h2>{vuln_table}
+<div class="summary"><span class="status {'success' if passed else 'failure'}">{'Passing' if passed else 'Failing'}</span>
+<span>{passed_count} of {len(GATES)} gates passed</span></div></div>
+<h2>Security gates</h2>
+<p class="lead">Every push runs these checks in order. A release is published only when all of them pass.</p>
+<div class="grid">{gate_cards}</div>
+<h2>Latest results</h2>
+<p class="lead">Numbers from the most recent run on <code>main</code>.</p>
+<div class="grid">{metrics}</div>
+<h2>Container vulnerabilities</h2>
+<p class="lead">Every known CVE in the published image, from Trivy. The gate fails on any high or critical CVE
+that has a fix. The rest have no fix released yet, and Dependabot's base-image updates pick them up once one ships.</p>
+{vuln_table}
 {supply}
-<h2>History</h2><div class="wrap"><table><tr><th>Run</th><th>Commit</th><th>Gates</th><th>Tests</th>
+<h2>History</h2>
+<p class="lead">One row per push to <code>main</code>, newest first (last 30). Fixable high/critical must stay at 0.
+All CVEs should fall over time as upstream fixes land.</p>
+<div class="wrap"><table><tr><th>Run</th><th>Commit</th><th>Gates</th><th>Tests</th>
 <th>Coverage %</th><th>Fixable high/crit</th><th>All CVEs</th></tr>{trend_rows}</table></div>
 <footer>Generated by <code>dashboard/build.py</code> from the reports each pipeline job uploads.
 Raw data: <a href="data.json">data.json</a> · <a href="history.json">history.json</a></footer>
