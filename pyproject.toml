@@ -1,0 +1,8 @@
+[project]
+name = "autoloan-api"
+version = "1.0.0"
+requires-python = ">=3.13"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--cov=app --cov-branch --cov-report=term-missing --cov-fail-under=100"
