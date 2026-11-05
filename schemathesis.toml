@@ -5,10 +5,11 @@
 enabled = true
 
 # Some rules span several fields and JSON Schema can't express them (down payment +
-# trade-in below the taxed price; lease cap cost above the residual), so a request
-# that is valid per the schema can still be a correct 422. Anything else is a failure.
-# Boundary cases make /compare/lease-vs-buy trip these often, which Schemathesis
-# reports as a "schema validation mismatch" warning; it does not fail the run.
+# trade-in below the taxed price; lease cap cost above the residual; unique vehicle
+# ids), so a request that is valid per the schema can still be a correct 422.
+# Anything else is a failure. Boundary cases make /compare/lease-vs-buy and /tco trip
+# these often, which Schemathesis reports as a "schema validation mismatch" warning;
+# it does not fail the run.
 [checks.positive_data_acceptance]
 expected-statuses = ["2XX", 422]
 
