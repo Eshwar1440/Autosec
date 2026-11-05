@@ -1,0 +1,72 @@
+{
+ "count": 3,
+ "message": "Results returned successfully",
+ "results": [
+  {
+   "odiNumber": 11774481,
+   "manufacturer": "General Motors, LLC",
+   "crash": false,
+   "fire": false,
+   "numberOfInjuries": 0,
+   "numberOfDeaths": 0,
+   "dateOfIncident": "10/24/2026",
+   "dateComplaintFiled": "10/29/2026",
+   "vin": "1G1FZ6S01K4",
+   "components": "STEERING",
+   "summary": "When driving the car and turning the wheel, the steering wheel does not go back to center by itself. I have to physically turn it back to straight.   This is a safety risk as the car isn't straightening out of a turn and physically harder to get back to center and center of the lane.  I took it back to the dealership I purchased and their service team is saying they don't notice an issue, which is untrue, it's clearly seen when driving.",
+   "products": [
+    {
+     "type": "Vehicle",
+     "productYear": "2019",
+     "productMake": "CHEVROLET",
+     "productModel": "BOLT EV",
+     "manufacturer": "General Motors, LLC"
+    }
+   ]
+  },
+  {
+   "odiNumber": 11765956,
+   "manufacturer": "General Motors, LLC",
+   "crash": false,
+   "fire": false,
+   "numberOfInjuries": 0,
+   "numberOfDeaths": 0,
+   "dateOfIncident": "09/02/2026",
+   "dateComplaintFiled": "09/21/2026",
+   "vin": "1G1FY6S01K4",
+   "components": "WHEELS,SERVICE BRAKES",
+   "summary": "I am reporting a recurring safety defect with our 2019 Chevrolet Bolt (~80,000 miles). On multiple occasions the left front wheel has overheated severely while driving, accompanied by a rapid, severe side-to-side steering wheel wobble and a burning smell.  On XXX after ~35 miles of driving (10+ miles at 50-63 mph), the steering wheel began shaking. We had to pull over and drive slowly along the shoulder, stopping twice to let the wheel cool. The left front wheel measured 627.9°F, while other wheels were under 200°F. On XXX, only three days after replacing the front brake pads and rotors, the left front wheel again overheated to 355°F (other wheels 116-139°F), with a burning smell.  The problem is intermittent and has not been reproduced during dealership inspections. The vehicle was inspected by Bennett Chevrolet ([XXX]) and RK Chevrolet ([XXX]) multiple times; each time no cause was found and no repair made, aside from new tires and, most recently, replaced front brake pads/rotors, which did not resolve the issue.  We believe this may involve the left front brake/caliper system or another component causing intermittent excessive heat and resistance at the wheel. We are concerned about loss of steering control and fire risk. We are elderly ([XXX] and [XXX]) and one of us is an above-knee amputee, making a roadside breakdown especially dangerous.  We have photos/videos of the incidents, temperature documentation, and the old brake pads/rotors retained for inspection. GM EV Concierge case #XXX is open but unresolved.  We are requesting this be investigated as a potential safety defect. INFORMATION REDACTED PURSUANT TO THE FREEDOM OF INFORMATION ACT (FOIA), 5 U.S.C. 552(B)(6)",
+   "products": [
+    {
+     "type": "Vehicle",
+     "productYear": "2019",
+     "productMake": "CHEVROLET",
+     "productModel": "BOLT EV",
+     "manufacturer": "General Motors, LLC"
+    }
+   ]
+  },
+  {
+   "odiNumber": 11765648,
+   "manufacturer": "General Motors, LLC",
+   "crash": false,
+   "fire": false,
+   "numberOfInjuries": 0,
+   "numberOfDeaths": 0,
+   "dateOfIncident": "09/19/2026",
+   "dateComplaintFiled": "09/20/2026",
+   "vin": "1G1FZ6S01K4",
+   "components": "STEERING",
+   "summary": "The steering wheel on my 2019 Chevy bolt is feeling stiff and harder to turn when making a right and left turn.",
+   "products": [
+    {
+     "type": "Vehicle",
+     "productYear": "2019",
+     "productMake": "CHEVROLET",
+     "productModel": "BOLT EV",
+     "manufacturer": "General Motors, LLC"
+    }
+   ]
+  }
+ ]
+}

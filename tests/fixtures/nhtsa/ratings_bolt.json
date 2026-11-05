@@ -1,0 +1,35 @@
+{
+ "Count": 1,
+ "Message": "Results returned successfully",
+ "Results": [
+  {
+   "OverallRating": "5",
+   "OverallFrontCrashRating": "4",
+   "FrontCrashDriversideRating": "5",
+   "FrontCrashPassengersideRating": "4",
+   "OverallSideCrashRating": "5",
+   "SideCrashDriversideRating": "5",
+   "SideCrashPassengersideRating": "4",
+   "combinedSideBarrierAndPoleRating-Front": "5",
+   "combinedSideBarrierAndPoleRating-Rear": "4",
+   "sideBarrierRating-Overall": "5",
+   "RolloverRating": "5",
+   "RolloverRating2": "Not Rated",
+   "RolloverPossibility": 0.097,
+   "RolloverPossibility2": 0.0,
+   "dynamicTipResult": "No Tip",
+   "SidePoleCrashRating": "5",
+   "NHTSAElectronicStabilityControl": "Standard",
+   "NHTSAForwardCollisionWarning": "Optional",
+   "NHTSALaneDepartureWarning": "Optional",
+   "ComplaintsCount": 179,
+   "RecallsCount": 6,
+   "InvestigationCount": 2,
+   "ModelYear": 2019,
+   "Make": "CHEVROLET",
+   "Model": "BOLT EV",
+   "VehicleDescription": "2019 Chevrolet Bolt EV 5 HB FWD",
+   "VehicleId": 13584
+  }
+ ]
+}

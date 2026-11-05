@@ -1,0 +1,29 @@
+{
+ "Count": 1,
+ "Message": "Results returned successfully. NOTE: Any missing decoded values should be interpreted as NHTSA does not have data on the specific variable. Missing value should NOT be interpreted as an indication that a feature or technology is unavailable for a vehicle.",
+ "SearchCriteria": "VIN(s): 1HGBH41JXMN109186",
+ "Results": [
+  {
+   "BedType": "Not Applicable",
+   "BodyCabType": "Not Applicable",
+   "BusFloorConfigType": "Not Applicable",
+   "BusType": "Not Applicable",
+   "CustomMotorcycleType": "Not Applicable",
+   "ErrorCode": "8",
+   "ErrorText": "8 - No detailed data available currently",
+   "Make": "HONDA",
+   "MakeID": "474",
+   "Manufacturer": "AMERICAN HONDA MOTOR CO., INC.",
+   "ManufacturerId": "988",
+   "Model": "",
+   "ModelYear": "1991",
+   "MotorcycleChassisType": "Not Applicable",
+   "MotorcycleSuspensionType": "Not Applicable",
+   "TrailerBodyType": "Not Applicable",
+   "TrailerType": "Not Applicable",
+   "VIN": "1HGBH41JXMN109186",
+   "VehicleDescriptor": "1HGBH41J*MN",
+   "VehicleType": "PASSENGER CAR"
+  }
+ ]
+}
