@@ -7,7 +7,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "dashboard"))
 import build  # noqa: E402
 
-ALL_PASS = {f"GATE_{key.upper()}": "success" for key, _, _ in build.GATES}
+ALL_PASS = {f"GATE_{key.upper()}": "success" for key, *_ in build.GATES}
 
 
 def write(root: Path, rel: str, content: str) -> None:
@@ -66,7 +66,7 @@ def test_missing_and_corrupt_reports_degrade_to_none(tmp_path):
         assert data[key] is None, key
     assert set(data["gates"].values()) == {"unknown"}
     page = build.render(data, [build.history_entry(data)])
-    assert "Gate failing" in page
+    assert "Failing" in page
     assert "n/a" in page
 
 
@@ -94,7 +94,7 @@ def test_main_writes_site_and_caps_history(reports, tmp_path, monkeypatch):
     history = json.loads((site / "history.json").read_text())
     assert len(history) == build.HISTORY_LIMIT
     assert history[-1]["passed"] is False
-    assert "Gate failing" in (site / "index.html").read_text(encoding="utf-8")
+    assert "0 of 7 gates passed" in (site / "index.html").read_text(encoding="utf-8")
     assert "failing" in (site / "badges" / "pipeline.svg").read_text()
     assert "1" in (site / "badges" / "vulnerabilities.svg").read_text()
 
