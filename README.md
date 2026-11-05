@@ -21,8 +21,6 @@ release is published only if all of them pass, and every published image is
 signed so anyone can verify where it came from. The results are public on the
 **[live security dashboard](https://eshwar1440.github.io/autosec/)**.
 
-The name covers both halves: **auto**motive safety and application **sec**urity.
-
 ## Features
 
 - **Financing:** loan quotes, amortization schedules, "what can I afford", and lease vs buy
