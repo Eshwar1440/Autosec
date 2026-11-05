@@ -8,7 +8,7 @@ from fastapi import FastAPI, Request, Response
 from fastapi.responses import JSONResponse
 
 from app.nhtsa import NhtsaClient, UpstreamError, VinNotFound
-from app.routes import financing, vehicle
+from app.routes import financing, fleet, vehicle
 
 SECURITY_HEADERS = {
     "Cache-Control": "no-store",
@@ -36,6 +36,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 app = FastAPI(title="autosec", version="1.2.0", docs_url=None, redoc_url=None, lifespan=lifespan)
 app.include_router(financing.router)
 app.include_router(vehicle.router)
+app.include_router(fleet.router)
 
 
 @app.middleware("http")

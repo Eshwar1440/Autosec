@@ -11,6 +11,9 @@ MONEY_PATTERN = r"^((0|[1-9]\d{0,6})(\.\d{1,2})?|10000000(\.0{1,2})?)$"
 APR_PATTERN = r"^(([0-9]|[12][0-9]|3[0-5])(\.\d{1,4})?|36(\.0{1,4})?)$"
 TAX_PATTERN = r"^(([0-9]|1[0-9])(\.\d{1,4})?|20(\.0{1,4})?)$"
 RESIDUAL_PATTERN = r"^(([0-9]|[1-8][0-9]|9[0-4])(\.\d{1,4})?|95(\.0{1,4})?)$"
+DEPRECIATION_PATTERN = r"^(([0-9]|[1-4][0-9])(\.\d{1,4})?|50(\.0{1,4})?)$"
+MPG_PATTERN = r"^((0|[1-9]\d?|1\d\d)(\.\d{1,2})?|200(\.0{1,2})?)$"
+FUEL_PRICE_PATTERN = r"^((0|[1-9]|1\d)(\.\d{1,2})?|20(\.0{1,2})?)$"
 
 
 def decimal_field(pattern: str, *, le: str, step: str, gt: str | None = None) -> Any:
@@ -48,6 +51,11 @@ Money = decimal_field(MONEY_PATTERN, le="10000000", step="0.01")
 Price = decimal_field(MONEY_PATTERN, le="10000000", step="0.01", gt="0")
 Apr = decimal_field(APR_PATTERN, le="36", step="0.0001")
 TaxRate = decimal_field(TAX_PATTERN, le="20", step="0.0001")
+Residual = decimal_field(RESIDUAL_PATTERN, le="95", step="0.0001", gt="0")
+GrowthRate = decimal_field(TAX_PATTERN, le="20", step="0.0001")
+DepreciationRate = decimal_field(DEPRECIATION_PATTERN, le="50", step="0.0001")
+Mpg = decimal_field(MPG_PATTERN, le="200", step="0.01", gt="0")
+FuelPrice = decimal_field(FUEL_PRICE_PATTERN, le="20", step="0.01")
 Term = Annotated[int, Field(ge=12, le=96)]
 
 
@@ -63,5 +71,3 @@ def business_rule_error(exc: ValueError) -> NoReturn:
     raise RequestValidationError(
         [{"type": "value_error", "loc": ("body",), "msg": str(exc), "input": None}]
     ) from exc
-
-Residual = decimal_field(RESIDUAL_PATTERN, le="95", step="0.0001", gt="0")
