@@ -216,6 +216,12 @@ def test_tco_endpoint_rejects_out_of_range(field, value):
     assert client.post("/tco", json={**TCO_BODY, field: value}).status_code == 422
 
 
+@pytest.mark.parametrize("field,value", [("annual_miles", False), ("years", True)])
+def test_tco_endpoint_rejects_booleans_for_integers(field, value):
+    # Pydantic would otherwise coerce true/false to 1/0 (found by Schemathesis, ST201)
+    assert client.post("/tco", json={**TCO_BODY, field: value}).status_code == 422
+
+
 def test_valuation_endpoint():
     body = client.post("/inventory/valuation", json={"as_of_year": 2026, "vehicles": FLEET}).json()
     assert body["total_msrp"] == "65000.00"

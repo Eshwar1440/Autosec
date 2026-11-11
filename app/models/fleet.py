@@ -4,9 +4,20 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.models.common import Apr, DepreciationRate, FuelPrice, GrowthRate, Money, Mpg, Price, TaxRate, Term
+from app.models.common import (
+    Apr,
+    DepreciationRate,
+    FuelPrice,
+    GrowthRate,
+    Money,
+    Mpg,
+    Price,
+    TaxRate,
+    Term,
+    int_field,
+)
 
-ModelYear = Annotated[int, Field(ge=1981, le=2100)]
+ModelYear = int_field(ge=1981, le=2100)
 
 
 class DepreciationRequest(BaseModel):
@@ -14,7 +25,7 @@ class DepreciationRequest(BaseModel):
 
     cost: Price
     salvage_value: Money = Decimal("0")
-    useful_life_years: Annotated[int, Field(ge=1, le=30)]
+    useful_life_years: int_field(ge=1, le=30)
     method: Literal["straight_line", "double_declining"] = "straight_line"
 
 
@@ -39,8 +50,8 @@ class TcoRequest(BaseModel):
     sales_tax_percent: TaxRate = Decimal("0")
     apr_percent: Apr = Decimal("0")
     term_months: Term = 60
-    years: Annotated[int, Field(ge=1, le=15)]
-    annual_miles: Annotated[int, Field(ge=0, le=200_000)]
+    years: int_field(ge=1, le=15)
+    annual_miles: int_field(ge=0, le=200_000)
     miles_per_gallon: Mpg
     fuel_price_per_gallon: FuelPrice
     annual_insurance: Money = Decimal("0")
@@ -76,7 +87,7 @@ class InventoryVehicle(BaseModel):
     id: Annotated[str, Field(pattern=r"^[A-Za-z0-9._-]{1,64}$", description="Stock number or other unique ID")]
     msrp: Price
     model_year: ModelYear
-    mileage: Annotated[int, Field(ge=0, le=1_000_000)]
+    mileage: int_field(ge=0, le=1_000_000)
     condition: Literal["excellent", "good", "fair", "poor"]
 
 
