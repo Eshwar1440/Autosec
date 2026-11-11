@@ -2,12 +2,12 @@
 
 **A car-finance and vehicle-safety API, shipped through a pipeline that blocks every release on security checks.**
 
-[![ci](https://github.com/Eshwar1440/autosec/actions/workflows/ci.yml/badge.svg)](https://github.com/Eshwar1440/autosec/actions/workflows/ci.yml)
-[![security gates](https://eshwar1440.github.io/autosec/badges/pipeline.svg)](https://eshwar1440.github.io/autosec/)
-[![tests](https://eshwar1440.github.io/autosec/badges/tests.svg)](https://eshwar1440.github.io/autosec/)
-[![coverage](https://eshwar1440.github.io/autosec/badges/coverage.svg)](https://eshwar1440.github.io/autosec/)
-[![fixable high/critical](https://eshwar1440.github.io/autosec/badges/vulnerabilities.svg)](https://eshwar1440.github.io/autosec/)
-[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/Eshwar1440/autosec/badge)](https://scorecard.dev/viewer/?uri=github.com/Eshwar1440/autosec)
+[![ci](https://github.com/Eshwar1440/Autosec/actions/workflows/ci.yml/badge.svg)](https://github.com/Eshwar1440/Autosec/actions/workflows/ci.yml)
+[![security gates](https://eshwar1440.github.io/Autosec/badges/pipeline.svg)](https://eshwar1440.github.io/Autosec/)
+[![tests](https://eshwar1440.github.io/Autosec/badges/tests.svg)](https://eshwar1440.github.io/Autosec/)
+[![coverage](https://eshwar1440.github.io/Autosec/badges/coverage.svg)](https://eshwar1440.github.io/Autosec/)
+[![fixable high/critical](https://eshwar1440.github.io/Autosec/badges/vulnerabilities.svg)](https://eshwar1440.github.io/Autosec/)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/Eshwar1440/Autosec/badge)](https://scorecard.dev/viewer/?uri=github.com/Eshwar1440/Autosec)
 
 autosec is a FastAPI service that answers the questions people ask before and
 after buying a car: what a loan or lease will really cost, what a car is worth,
@@ -19,7 +19,7 @@ Every change goes through an automated DevSecOps pipeline: tests, static
 analysis, secret scanning, container scanning, and live attack testing. A
 release is published only if all of them pass, and every published image is
 signed so anyone can verify where it came from. The results are public on the
-**[live security dashboard](https://eshwar1440.github.io/autosec/)**.
+**[live security dashboard](https://eshwar1440.github.io/Autosec/)**.
 
 ## Features
 
