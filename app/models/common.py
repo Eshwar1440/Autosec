@@ -47,6 +47,19 @@ def decimal_field(pattern: str, *, le: str, step: str, gt: str | None = None) ->
     ]
 
 
+def _reject_bool(value: object) -> object:
+    if isinstance(value, bool):
+        raise ValueError("must be an integer, not a boolean")
+    return value
+
+
+def int_field(**constraints: Any) -> Any:
+    """An int that rejects JSON true/false, which Pydantic would otherwise coerce to 1/0."""
+    # Field must come before the validator, or the OpenAPI schema emits "ge"/"le"
+    # instead of "minimum"/"maximum" and fuzzers ignore the bounds.
+    return Annotated[int, Field(**constraints), BeforeValidator(_reject_bool)]
+
+
 Money = decimal_field(MONEY_PATTERN, le="10000000", step="0.01")
 Price = decimal_field(MONEY_PATTERN, le="10000000", step="0.01", gt="0")
 Apr = decimal_field(APR_PATTERN, le="36", step="0.0001")
@@ -56,7 +69,7 @@ GrowthRate = decimal_field(TAX_PATTERN, le="20", step="0.0001")
 DepreciationRate = decimal_field(DEPRECIATION_PATTERN, le="50", step="0.0001")
 Mpg = decimal_field(MPG_PATTERN, le="200", step="0.01", gt="0")
 FuelPrice = decimal_field(FUEL_PRICE_PATTERN, le="20", step="0.01")
-Term = Annotated[int, Field(ge=12, le=96)]
+Term = int_field(ge=12, le=96)
 
 
 class ErrorMessage(BaseModel):
