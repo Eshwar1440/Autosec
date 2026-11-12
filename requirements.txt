@@ -1,5 +1,5 @@
-cachetools==7.2.8
-fastapi==0.162.0
+cachetools==8.0.0
+fastapi==0.162.2
 httpx==0.28.1
-pydantic==2.14.2
+pydantic==2.14.3
 uvicorn==0.54.0

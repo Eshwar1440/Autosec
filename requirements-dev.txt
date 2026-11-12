@@ -1,4 +1,4 @@
 -r requirements.txt
-hypothesis==6.170.14
+hypothesis==6.170.15
 pytest==9.2.0
 pytest-cov==7.1.0
